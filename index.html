@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Stopping Distance v2</title>
+    <link rel="stylesheet" href="./style.css">
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stopping Distance Simulator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Stopping Distance Simulator</h1>
+    </header>
+
+    <main class="main">
+      <!-- Reaction Test Card -->
+      <section class="card">
+        <div class="card-inner">
+          <h2 class="card-title">Test Your Reaction Time</h2>
+          <p class="muted">Click the button to start. When the box turns green, click it as fast as you can. We'll measure your reaction time three times and calculate the average.</p>
+
+          <div class="reaction-area-wrap">
+            <div id="reactionTestArea" class="reaction-test-area">
+              <span id="reactionTestText">Click to start</span>
+            </div>
+
+            <div class="controls-row">
+              <button id="startReactionTest" class="btn teal-btn">Start Reaction Test</button>
+
+              <div class="info">
+                <div><strong>Test progress:</strong> <span id="testProgress">0/3</span></div>
+              </div>
+
+              <div class="info">
+                <div><strong>Your average reaction time:</strong> <span id="measuredReactionTime">Not measured yet</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Car Simulation Card -->
+      <section class="card">
+        <div class="card-inner">
+          <h2 class="card-title">Car Simulation</h2>
+
+          <div class="road-wrap">
+            <div id="roadContainer" class="road">
+              <div id="roadMarkings" class="road-markings"></div>
+
+              <div id="thinkingDistanceVis" class="thinking-distance"></div>
+              <div id="brakingDistanceVis" class="braking-distance"></div>
+
+              <div id="car" class="car" style="left:20%;">
+                <!-- simple SVG car -->
+                <svg width="80" height="40" viewBox="0 0 80 40" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="15" y="16" width="50" height="16" rx="3" fill="#3b82f6" />
+                  <rect x="25" y="6" width="30" height="14" rx="4" fill="#3b82f6" />
+                  <circle cx="25" cy="32" r="7" fill="#1e3a8a" />
+                  <circle cx="55" cy="32" r="7" fill="#1e3a8a" />
+                  <g id="brakeLights" class="brake-lights">
+                    <rect x="10" y="20" width="5" height="8" rx="1" fill="#ef4444" />
+                    <rect x="10" y="20" width="5" height="8" rx="1" fill="#ef4444" />
+                  </g>
+                </svg>
+              </div>
+
+              <div id="hazard" class="hazard" style="right:10%; opacity:0;">
+                <svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                  <polygon points="25,5 45,45 5,45" fill="#ef4444" stroke="#b91c1c" stroke-width="2" />
+                  <text x="25" y="35" text-anchor="middle" fill="white" font-weight="bold" font-size="20">!</text>
+                </svg>
+              </div>
+
+              <div id="thinkingMarker" class="distance-marker thinking-marker">
+                <div class="distance-label">Thinking point</div>
+              </div>
+
+              <div id="stoppingMarker" class="distance-marker stopping-marker">
+                <div class="distance-label">Stopping point</div>
+              </div>
+
+              <div id="hazardMarker" class="distance-marker hazard-marker">
+                <div class="distance-label">Hazard</div>
+              </div>
+            </div>
+
+            <div class="legend-row">
+              <div class="legend-item"><span class="swatch thinking-swatch"></span> Thinking Distance</div>
+              <div class="legend-item"><span class="swatch braking-swatch"></span> Braking Distance</div>
+              <div class="legend-item"><span class="swatch hazard-swatch"></span> Hazard</div>
+            </div>
+
+            <div class="distance-scale">
+              <div class="scale-bar">
+                <div class="scale-seg"></div>
+                <div class="scale-seg"></div>
+                <div class="scale-seg"></div>
+                <div class="scale-seg"></div>
+                <div class="scale-seg"></div>
+              </div>
+              <div class="scale-labels">
+                <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+              </div>
+            </div>
+
+            <div class="run-sim" style="display:flex; gap:8px; margin-top:8px;">
+              <button id="simulateBtn" class="btn navy-btn">Run Simulation</button>
+              <button id="resetBtn" class="btn coral-btn">Reset</button>
+            </div>
+
+            <div id="simulationStatus" class="simulation-status" aria-live="polite" hidden></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Controls & Results Card -->
+      <section class="card">
+        <div class="card-inner">
+          <h2 class="card-title">Stopping Distance Controls</h2>
+          <p class="muted">Explore how different factors affect a vehicle's stopping distance. Adjust the sliders below to see the impact on both thinking distance and braking distance.</p>
+
+          <div class="controls-grid">
+            <div class="controls-column">
+              <label class="label">Speed (km/h)</label>
+              <input id="speedSlider" class="slider" type="range" min="30" max="110" value="50" />
+              <div class="range-legend"><span>30</span><span>70</span><span>110</span></div>
+              <div class="center-text" id="speedValue">50 km/h</div>
+
+              <label class="label" style="margin-top:1rem;">Reaction Time (seconds)</label>
+              <div class="reaction-row">
+                <input id="reactionSlider" class="slider" type="range" min="0.2" max="2.0" step="0.01" value="0.7" />
+                <button id="useMyReaction" class="btn gold-btn" disabled>Use My Time</button>
+              </div>
+              <div class="range-legend"><span>0.2</span><span>1.1</span><span>2.0</span></div>
+              <div class="center-text" id="reactionValue">0.7 seconds</div>
+
+              <label class="label" style="margin-top:1rem;">Road Condition</label>
+              <select id="roadCondition" class="select">
+                <option value="dry">Dry (Good Friction)</option>
+                <option value="wet">Wet (Reduced Friction)</option>
+                <option value="snow">Snow/Ice (Poor Friction)</option>
+              </select>
+            </div>
+
+            <div class="results-column">
+              <div class="results-box">
+                <h3 class="results-title">Results</h3>
+                <div class="result-row"><span>Thinking Distance:</span><span id="thinkingDistance">9.7 metres</span></div>
+                <div class="result-row"><span>Braking Distance:</span><span id="brakingDistance">14.3 metres</span></div>
+                <div class="result-row border-top"><span>Total Stopping Distance:</span><strong id="totalDistance">24.0 metres</strong></div>
+              </div>
+
+              <div class="facts-box">
+                <h4>Stopping Distance Facts</h4>
+                <ul>
+                  <li>Stopping distance = Thinking distance + Braking distance</li>
+                  <li>Thinking distance is how far you travel before you start braking (speed × reaction time)</li>
+                  <li>Braking distance increases with the square of speed (doubling speed quadruples braking distance)</li>
+                  <li>Average reaction time is about 0.7 seconds, but can vary from 0.2 to 2 seconds</li>
+                  <li>For a typical car at 50 km/h on dry roads: thinking distance ≈ 10m, braking distance ≈ 14m</li>
+                  <li>Wet roads can double your braking distance; ice can multiply it by 10</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="header" style="padding:12px;">
+      <p class="muted">Interactive Stopping Distance Simulator | Educational Tool</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+    <script  src="./script.js"></script>
+
+  </body>
+  
+</html>
