@@ -34,7 +34,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
+li {
+  line-height: 2; 
+}
 
 /* Layout */
 .container {
@@ -68,13 +70,13 @@ body {
   overflow: visible;
 }
 .card-inner { padding:18px; }
-.card-title { font-size:1.1rem; margin-bottom:8px; color:var(--navy); }
+.card-title { font-size:1.2rem; margin-bottom:8px; color:var(--navy); }
 
 /* text */
-.muted { color: var(--slate); font-size: .95rem; }
+.muted { color: var(--slate); font-size: 1rem; margin-bottom: 10px; }
 
 /* reaction area */
-.reaction-area-wrap { display:flex; flex-direction:column; gap:12px; }
+.reaction-area-wrap { display:flex; flex-direction:column; gap:24px; }
 .reaction-test-area {
   height: 160px;
   border-radius: 10px;
@@ -112,13 +114,22 @@ body {
 
 /* button variants */
 .teal-btn{ background: rgba(26,188,156,0.9); color:var(--white); }
-.teal-btn:hover{ background: rgba(26,188,156,0.8); }
+.teal-btn:hover{ background: rgba(26,188,156,0.8); transform: translateY(-10%); opacity: .98;  }
 
 .gold-btn{ background: rgba(241,196,15,0.9); color:var(--navy); }
-.gold-btn:hover{ background: rgba(241,196,15,0.8); }
+.gold-btn:hover{ background: rgba(241,196,15,0.8);  transform: translateY(-10%); opacity: .98; }
 
 .navy-btn{ background: rgba(44,62,80,0.9); color:var(--white); }
-.navy-btn:hover{ background: rgba(44,62,80,0.8); }
+.navy-btn:hover{ background: rgba(44,62,80,0.8); transform: translateY(-10%); opacity: .98;  }
+.coral-btn {
+  background-color: rgba(231, 76, 60, 0.8);
+  color: white;
+}
+
+.coral-btn:hover {
+  background-color: rgba(231, 76, 60, 0.7);
+  transform: translateY(-10%); opacity: .98; 
+}
 
 /* road & visuals */
 .road-wrap { display:flex; flex-direction:column; gap:10px; }
