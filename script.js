@@ -1,299 +1,429 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const questions = [
-    {
-      question: "What is the distance travelled by a vehicle when the driver is reacting to a hazard?",
-      options: [
-        "Stopping distance",
-        "Thinking distance",
-        "Braking distance",
-        "Reaction time"
-      ],
-      correctAnswer: 1,
-      explanation: "During the fraction of a second that a driver takes to react to a hazard and press the brakes, the vehicle will have moved - the Thinking Distance"
-    },
-    {
-      question: "If a car's speed doubles from 30 km/h to 60 km/h, what happens to its braking distance?",
-      options: [
-        "Stays the same",
-        "Doubles",
-        "Quadruples",
-        "Increases by 8 times"
-      ],
-      correctAnswer: 2,
-      explanation: "Braking distance increases with the square of speed. 2× speed = 4× braking distance (2²). At 30 km/h → 9m braking distance, at 60 km/h → 36m."
-    },
-    {
-      question: "A typical reaction time is 0.4 seconds. At 50 km/h (14 m/s), how far does the car travel during reaction time?",
-      options: [
-        "3.2 m",
-        "5.6 m",
-        "20.0 m",
-        "56.0 m"
-      ],
-      correctAnswer: 1,
-      explanation: "Calculation: Thinking distance = speed × time = 14 m/s × 0.4s = 5.6 m. This is just the distance covered before braking begins!"
-    },
-    {
-      question: "Which condition would INCREASE stopping distance the most?",
-      options: [
-        "Dry concrete road ",
-        "Wet asphalt road",
-        "Icy road",
-        "New tyres on dry road"
-      ],
-      correctAnswer: 2,
-      explanation: "Icy roads can increase braking distance by 7-10× compared to dry conditions."
-    },
-    {
-      question: "Which factor ONLY affects braking distance?",
-      options: [
-        "Using a mobile phone",
-        "Worn tire tread",
-        "Driver age",
-        "Loud music"
-      ],
-      correctAnswer: 1,
-      explanation: "Braking distance is increased by: • Worn brakes/tires • Wet/icy roads • Higher speed • Vehicle weight. It's NOT affected by the driver's reactions."
-    },
-    {
-      question: "What makes up total stopping distance?",
-      options: [
-        "Braking distance only",
-        "Thinking distance + braking distance",
-        "Speed + reaction time",
-        "Vehicle weight + road condition"
-      ],
-      correctAnswer: 1,
-      explanation: "Total stopping distance has two parts: 1) Thinking distance (time to react) and 2) Braking distance (time for car to stop)."
-    },
-    {
-      question: "How does tiredness affect stopping distance?",
-      options: [
-        "Only increases braking distance",
-        "Can double reaction time (increasing thinking distance)",
-        "Improves braking performance",
-        "Has no measurable effect"
-      ],
-      correctAnswer: 1,
-      explanation: "Fatigue can increase reaction time significantly. This could double the thinking distance"
-    },
-    {
-      question: "Which has the shortest stopping distance when traveling at 50 km/h?",
-      options: [
-        "Sports car on dry road",
-        "Bus on wet road",
-        "Bicycle on icy road",
-        "Motorbike on gravel"
-      ],
-      correctAnswer: 0,
-      explanation: "Sports cars have the best brakes and tires. Dry roads provide most friction. Combination gives shortest stopping distance."
-    },
-    {
-      question: "Which factor affects BOTH thinking and braking distance?",
-      options: [
-        "Drinking alcohol",
-        "Speed of the vehicle",
-        "Foggy weather",
-        "Number of passengers"
-      ],
-      correctAnswer: 1,
-      explanation: "Speed increases: • Thinking distance (more distance covered during reaction time) • Braking distance (more kinetic energy to dissipate)."
-    },
-    {
-      question: "Which factor ONLY affects thinking distance?",
-      options: [
-        "Wet road surface",
-        "Driver tiredness",
-        "Worn brake pads",
-        "Icy conditions"
-      ],
-      correctAnswer: 1,
-      explanation: "Thinking distance is increased by: • Tiredness • Alcohol/drugs • Distractions • Poor visibility. It's NOT affected by vehicle/road conditions."
-    }
-  ];
+document.addEventListener("DOMContentLoaded", function () {
+  // Simulator elements
+  const speedSlider = document.getElementById("speedSlider");
+  const reactionSlider = document.getElementById("reactionSlider");
+  const roadCondition = document.getElementById("roadCondition");
+  const simulateBtn = document.getElementById("simulateBtn");
+  const resetBtn = document.getElementById("resetBtn"); // NEW
+  const useMyReactionBtn = document.getElementById("useMyReaction");
+  const simulationStatus = document.getElementById("simulationStatus");
 
-  let currentQuestion = 0;
-  let score = 0;
-  let userAnswers = [];
+  const speedValue = document.getElementById("speedValue");
+  const reactionValue = document.getElementById("reactionValue");
+  const thinkingDistance = document.getElementById("thinkingDistance");
+  const brakingDistance = document.getElementById("brakingDistance");
+  const totalDistance = document.getElementById("totalDistance");
 
-  const quizContent = document.getElementById('quiz-content');
-  const questionNumberEl = document.getElementById('question-number');
-  const progressBarEl = document.getElementById('progress-bar');
-  const scoreDisplayEl = document.getElementById('score-display');
+  const roadContainer = document.getElementById("roadContainer");
+  const roadMarkings = document.getElementById("roadMarkings");
+  const car = document.getElementById("car");
+  const carGraphic = car && car.querySelector ? car.querySelector("svg") : null;
+  const brakeLights = document.getElementById("brakeLights");
+  const hazard = document.getElementById("hazard");
+  const thinkingMarker = document.getElementById("thinkingMarker");
+  const stoppingMarker = document.getElementById("stoppingMarker");
+  const hazardMarker = document.getElementById("hazardMarker");
+  const thinkingDistanceVis = document.getElementById("thinkingDistanceVis");
+  const brakingDistanceVis = document.getElementById("brakingDistanceVis");
 
-  function displayQuestion() {
-    const q = questions[currentQuestion];
+  // Reaction test elements
+  const reactionTestArea = document.getElementById("reactionTestArea");
+  const reactionTestText = document.getElementById("reactionTestText");
+  const startReactionTest = document.getElementById("startReactionTest");
+  const measuredReactionTime = document.getElementById("measuredReactionTime");
+  const testProgress = document.getElementById("testProgress");
 
-    questionNumberEl.textContent = `Question ${currentQuestion + 1}/${questions.length}`;
-    progressBarEl.style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+  let reactionTestState = "idle"; // idle, waiting, ready, measuring
+  let reactionTestStartTime = 0;
+  let measuredReactionTimeValue = null;
+  let reactionTimes = [];
+  let currentTestNumber = 0;
+  let simulationRunning = false;
 
-    let optionsHTML = '';
-    q.options.forEach((opt, idx) => {
-      optionsHTML += `
-        <div class="option-item">
-          <label class="option-label" data-index="${idx}">
-            <input type="radio" name="answer" value="${idx}">
-            <span class="option-text">${opt}</span>
-          </label>
-        </div>
-      `;
-    });
+  // Keep active timeouts so we can clear them on reset
+  const activeTimeouts = [];
 
-    quizContent.innerHTML = `
-      <div class="question-block">
-        <div class="question-title">${q.question}</div>
-        <form id="quiz-form">
-          <div class="options">${optionsHTML}</div>
-          <div style="margin-top:14px;">
-            <button type="submit" id="submit-btn" class="btn btn-primary" aria-label="Submit answer">Submit Answer</button>
-          </div>
-        </form>
-      </div>
-      <div id="feedback" class="feedback hidden"></div>
-    `;
-
-    const form = document.getElementById('quiz-form');
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      submitAnswer();
-    });
+  function safeSetTimeout(fn, delay) {
+    const id = setTimeout(fn, delay);
+    activeTimeouts.push(id);
+    return id;
   }
 
-  function submitAnswer() {
-    const selected = document.querySelector('input[name="answer"]:checked');
+  function clearActiveTimeouts() {
+    while (activeTimeouts.length) {
+      const id = activeTimeouts.pop();
+      clearTimeout(id);
+    }
+  }
 
-    if (!selected) {
-      alert('Please select an answer!');
-      return;
+  // Reaction test logic
+  function startReactionTestFunc() {
+    // Reset test if we're starting a new series
+    if (currentTestNumber === 0 || currentTestNumber === 3) {
+      reactionTimes = [];
+      currentTestNumber = 0;
+      testProgress.textContent = "0/3";
     }
 
-    const answer = parseInt(selected.value, 10);
-    const correct = answer === questions[currentQuestion].correctAnswer;
+    currentTestNumber++;
+    testProgress.textContent = `${currentTestNumber}/3`;
 
-    if (correct) {
-      score++;
-      scoreDisplayEl.textContent = `Score: ${score}`;
-    }
+    reactionTestArea.style.backgroundColor = "#FEF3C7"; // Yellow background
+    reactionTestText.textContent = "Wait for green...";
+    reactionTestState = "waiting";
 
-    userAnswers.push({
-      question: currentQuestion,
-      userAnswer: answer,
-      correct: correct
-    });
+    // Random delay between 2-5 seconds
+    const delay = 2000 + Math.random() * 3000;
 
-    // Show feedback
-    const feedbackDiv = document.getElementById('feedback');
-    feedbackDiv.classList.remove('hidden');
-    feedbackDiv.className = 'feedback ' + (correct ? 'correct' : 'incorrect');
-
-    // icon SVGs
-    const icon = correct ? '<svg class="icon" viewBox="0 0 20 20"><path fill="currentColor" d="M7.4 13.4L4 10l1.4-1.4L7.4 10.6 14.6 3.4 16 4.8z"></path></svg>' :
-                          '<svg class="icon" viewBox="0 0 20 20"><path fill="currentColor" d="M10 8.6l3.2-3.2 1.4 1.4L11.4 10l3.2 3.2-1.4 1.4L10 11.4l-3.2 3.2-1.4-1.4L8.6 10 5.4 6.8 6.8 5.4 10 8.6z"></path></svg>';
-
-    feedbackDiv.innerHTML = `
-      <div style="display:flex;align-items:flex-start;gap:10px;">
-        <div style="flex-shrink:0;">${icon}</div>
-        <div>
-          <p style="margin:0 0 6px;font-weight:600;">${correct ? 'Correct!' : 'Incorrect!'}</p>
-          <p style="margin:0;font-size:14px;">${questions[currentQuestion].explanation}</p>
-        </div>
-      </div>
-      <div style="margin-top:12px;">
-        <button id="next-btn" class="btn btn-primary">${currentQuestion < questions.length - 1 ? 'Next Question' : 'See Results'}</button>
-      </div>
-    `;
-
-    // disable options
-    const options = document.querySelectorAll('input[name="answer"]');
-    options.forEach(opt => opt.disabled = true);
-
-    // highlight correct and wrong
-    const labels = document.querySelectorAll('.option-label');
-    labels.forEach((label, idx) => {
-      if (idx === questions[currentQuestion].correctAnswer) {
-        label.classList.add('correct-answer');
-      } else if (idx === answer && !correct) {
-        label.classList.add('wrong-answer');
+    safeSetTimeout(() => {
+      if (reactionTestState === "waiting") {
+        reactionTestArea.style.backgroundColor = "#D1FAE5"; // Green background
+        reactionTestText.textContent = "Click now!";
+        reactionTestState = "ready";
+        reactionTestStartTime = Date.now();
       }
-    });
-
-    const submitBtn = document.getElementById('submit-btn');
-    if (submitBtn) submitBtn.disabled = true;
-
-    document.getElementById('next-btn').addEventListener('click', nextQuestion);
+    }, delay);
   }
 
-  function nextQuestion() {
-    currentQuestion++;
-    if (currentQuestion < questions.length) {
-      displayQuestion();
+  // Attach event listeners
+  startReactionTest.onclick = startReactionTestFunc;
+
+  reactionTestArea.onclick = function () {
+    if (reactionTestState === "idle") {
+      startReactionTestFunc();
+    } else if (reactionTestState === "waiting") {
+      // Clicked too early
+      reactionTestArea.style.backgroundColor = "#FEE2E2"; // Red background
+      reactionTestText.textContent = "Too early! Click to try again.";
+      reactionTestState = "idle";
+    } else if (reactionTestState === "ready") {
+      // Measure reaction time
+      const reactionTime = (Date.now() - reactionTestStartTime) / 1000;
+      reactionTimes.push(reactionTime);
+
+      if (currentTestNumber < 3) {
+        reactionTestArea.style.backgroundColor = "#DBEAFE"; // Blue background
+        reactionTestText.textContent = `Test ${currentTestNumber}/3: ${reactionTime.toFixed(
+          3
+        )} seconds. Get ready for next test...`;
+        reactionTestState = "idle";
+
+        // Automatically start next test after 1.5 seconds
+        safeSetTimeout(() => {
+          startReactionTestFunc();
+        }, 1500);
+      } else {
+        // Calculate average after 3 tests
+        const averageReactionTime =
+          reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length;
+        measuredReactionTimeValue = averageReactionTime;
+        measuredReactionTime.textContent =
+          averageReactionTime.toFixed(3) + " seconds";
+
+        reactionTestArea.style.backgroundColor = "#DBEAFE"; // Blue background
+        reactionTestText.textContent = `Average reaction time: ${averageReactionTime.toFixed(
+          3
+        )} seconds. Click to try again.`;
+        reactionTestState = "idle";
+
+        // Enable the "Use My Time" button
+        useMyReactionBtn.disabled = false;
+      }
+    }
+  };
+
+  useMyReactionBtn.onclick = function () {
+    if (measuredReactionTimeValue !== null) {
+      reactionSlider.value = Math.min(
+        Math.max(measuredReactionTimeValue, 0.2),
+        2.0
+      );
+      reactionValue.textContent =
+        measuredReactionTimeValue.toFixed(2) + " seconds";
+      //updateDistances();
+    }
+  };
+function setResultsToZero() {
+        thinkingDistance.textContent = `0.0 metres`;
+        brakingDistance.textContent = `0.0 metres`;
+        totalDistance.textContent = `0.0 metres`;
+    }
+    setResultsToZero();
+  
+  // Update displayed values when sliders change
+  speedSlider.oninput = function () {
+    speedValue.textContent = this.value + " km/h";
+    //updateDistances();
+  };
+
+  reactionSlider.oninput = function () {
+    reactionValue.textContent = this.value + " seconds";
+    //updateDistances();
+  };
+// Compute distances (returns numbers in metres)
+function computeDistances() {
+    const speed = parseFloat(speedSlider.value); // km/h
+    const reactionTimeSeconds = parseFloat(reactionSlider.value);
+    const roadType = roadCondition.value;
+
+    const speedMS = speed * 0.27778; // m/s
+    const thinkingDist = speedMS * reactionTimeSeconds;
+
+    let frictionCoefficient = 0.7;
+    if (roadType === 'wet') frictionCoefficient = 0.4;
+    if (roadType === 'snow') frictionCoefficient = 0.1;
+
+    const brakingDist = Math.pow(speedMS, 2) / (2 * frictionCoefficient * 9.81);
+    const totalDist = thinkingDist + brakingDist;
+
+    return { thinkingDist, brakingDist, totalDist, speedMS };
+}
+
+  //roadCondition.onchange = updateDistances;
+
+  // Calculate and update distances using more accurate formulas
+  
+  // Initial calculation
+ 
+   let simulationHasRun = false;
+  
+  // Run simulation with improved animation
+  simulateBtn.onclick = function () {
+    if (simulationRunning) return;
+    simulationRunning = true;
+
+    // Reset simulation state
+    resetSimulation();
+
+    // Show simulation status
+    simulationStatus.hidden = false;
+    simulationStatus.textContent = "Car moving...";
+    simulationStatus.className = "simulation-status";
+
+    // Get current values
+    const speed = parseFloat(speedSlider.value);
+    const reactionTimeSeconds = parseFloat(reactionSlider.value);
+    const roadType = roadCondition.value;
+
+    // Convert km/h to m/s
+    const speedMS = speed * 0.27778;
+
+    // Calculate distances
+    let frictionCoefficient = 0.7; // Dry road
+    if (roadType === "wet") frictionCoefficient = 0.4; // Wet road
+    if (roadType === "snow") frictionCoefficient = 0.1; // Snow/ice
+
+    const thinkingDist = speedMS * reactionTimeSeconds;
+    const brakingDist = Math.pow(speedMS, 2) / (2 * frictionCoefficient * 9.81);
+    const totalDist = thinkingDist + brakingDist;
+
+    simulationHasRun = true;
+    
+    // Disable button during animation
+    simulateBtn.disabled = true;
+    simulateBtn.classList.add("disabled");
+
+    // Set car position
+    car.style.left = "20%";
+    car.style.top = "50%";
+    car.style.transform = "translateY(-50%)";
+
+    // Start road animation - speed based on vehicle speed
+    const animationDuration = Math.max(1, Math.min(4, 110 / speed));
+    roadMarkings.style.animationDuration = `${animationDuration}s`;
+    roadMarkings.classList.add("animate-road");
+
+    // Add subtle car vibration
+    //car.classList.add('animate-shake');
+    if (carGraphic) {
+      carGraphic.classList.add("animate-shake");
     } else {
-      showResults();
+      car.classList.add("animate-shake");
+    }
+
+    // Set hazard position (80% of road width)
+    const roadWidth = roadContainer.offsetWidth;
+    const hazardPosition = roadWidth * 0.8;
+    hazard.style.right = "10%";
+
+    // Scale for visualization (max 100m fits in our visual)
+    const scaleFactor = roadWidth / 100;
+
+    // Position markers for distances
+    const carStartPosition = roadWidth * 0.2; // 20% from left
+    const thinkingEndPosition = carStartPosition + thinkingDist * scaleFactor;
+    const stoppingEndPosition = thinkingEndPosition + brakingDist * scaleFactor;
+
+    // After 2 seconds, show the hazard
+    safeSetTimeout(() => {
+      // Show hazard
+      hazard.style.opacity = "1";
+
+      // Position hazard marker
+      hazardMarker.style.left = `${hazardPosition}px`;
+      hazardMarker.style.opacity = "1";
+
+      simulationStatus.textContent = "Hazard detected!";
+
+      // Stop road animation - now the car will move
+      roadMarkings.classList.remove("animate-road");
+
+      // After reaction time, start moving the car
+      safeSetTimeout(() => {
+        // Show thinking distance visualization
+        thinkingDistanceVis.style.left = `${carStartPosition}px`;
+        thinkingDistanceVis.style.width = `${thinkingDist * scaleFactor}px`;
+        thinkingDistanceVis.style.opacity = "1";
+
+        // Position thinking marker
+        thinkingMarker.style.left = `${thinkingEndPosition}px`;
+        thinkingMarker.style.opacity = "1";
+
+        simulationStatus.textContent = "Thinking...";
+
+        // Calculate animation time based on speed
+        // Thinking phase - constant speed
+        const thinkingTime = reactionTimeSeconds;
+
+        // Move car at constant speed during thinking phase
+        car.style.transition = `left ${thinkingTime}s linear`;
+        car.style.left = `${thinkingEndPosition}px`;
+
+        // After thinking time, start braking
+        safeSetTimeout(() => {
+          // Activate brake lights
+          if (brakeLights) brakeLights.classList.add("active");
+
+          // Show braking distance visualization
+          brakingDistanceVis.style.left = `${thinkingEndPosition}px`;
+          brakingDistanceVis.style.width = `${brakingDist * scaleFactor}px`;
+          brakingDistanceVis.style.opacity = "1";
+
+          // Position stopping marker
+          stoppingMarker.style.left = `${stoppingEndPosition}px`;
+          stoppingMarker.style.opacity = "1";
+
+          // Braking phase - deceleration
+          // Calculate braking time based on physics (v/a where a is deceleration)
+          const brakingTime = Math.max(
+            3,
+            speedMS / (frictionCoefficient * 9.81)
+          );
+
+          // Move car with deceleration during braking phase
+          car.style.transition = `left ${brakingTime}s cubic-bezier(0.25, 0.1, 0.25, 1)`;
+          car.style.left = `${stoppingEndPosition}px`;
+
+          // Stop car vibration
+          // car.classList.remove('animate-shake');
+          if (carGraphic) {
+            carGraphic.classList.remove("animate-shake");
+          } else {
+            car.classList.remove("animate-shake");
+          }
+
+          simulationStatus.textContent = "Braking...";
+
+          // Calculate if car stops in time or hits hazard
+          const stopsInTime = stoppingEndPosition < hazardPosition;
+
+          // After braking time, show result
+          safeSetTimeout(() => {
+            if (stopsInTime) {
+              // Car stops before hazard
+              simulationStatus.textContent = "Stopped safely! ✓";
+              simulationStatus.style.color = "green";
+            } else {
+              // Car hits hazard
+              simulationStatus.textContent = "Collision! ✗";
+              simulationStatus.style.color = "crimson";
+
+              // Add collision effect
+              //car.classList.add('animate-shake');
+              if (carGraphic) {
+                carGraphic.classList.add("animate-shake");
+              } else {
+                car.classList.add("animate-shake");
+              }
+
+              hazard.classList.add("animate-shake");
+            }
+             thinkingDistance.textContent = `${thinkingDist.toFixed(1)} metres`;
+    brakingDistance.textContent = `${brakingDist.toFixed(1)} metres`;
+    totalDistance.textContent = `${totalDist.toFixed(1)} metres`;
+
+            // Re-enable button after animation completes
+            safeSetTimeout(() => {
+              simulateBtn.disabled = false;
+              simulateBtn.classList.remove("disabled");
+              simulationRunning = false;
+            }, 1500);
+          }, brakingTime * 1000);
+        }, thinkingTime * 1000);
+      }, reactionTimeSeconds);
+    }, 2000);
+  };
+
+  // Reset button handler
+  resetBtn.addEventListener("click", () => {
+    // Stop and clear any pending timeouts
+    clearActiveTimeouts();
+
+    // Reset the simulation visuals and UI
+    resetSimulation();
+  setResultsToZero();
+    // Re-enable simulate button
+    simulateBtn.disabled = false;
+    simulateBtn.classList.remove("disabled");
+
+    // Reset simulationRunning flag
+    simulationRunning = false;
+  });
+
+  function resetSimulation() {
+    // Reset all animation states
+    roadMarkings.classList.remove("animate-road");
+    //car.classList.remove('animate-shake');
+    if (carGraphic) {
+      carGraphic.classList.remove("animate-shake");
+    } else {
+      car.classList.remove("animate-shake");
+    }
+
+    hazard.classList.remove("animate-shake");
+
+    // Reset car position and transition
+    car.style.left = "20%";
+    car.style.transition = "none";
+
+    // Reset opacity of markers
+    if (thinkingMarker) thinkingMarker.style.opacity = "0";
+    if (stoppingMarker) stoppingMarker.style.opacity = "0";
+    if (hazardMarker) hazardMarker.style.opacity = "0";
+
+    // Reset distance visualizations
+    if (thinkingDistanceVis) {
+      thinkingDistanceVis.style.opacity = "0";
+      thinkingDistanceVis.style.width = "0px";
+      thinkingDistanceVis.style.left = "0px";
+    }
+    if (brakingDistanceVis) {
+      brakingDistanceVis.style.opacity = "0";
+      brakingDistanceVis.style.width = "0px";
+      brakingDistanceVis.style.left = "0px";
+    }
+
+    // Reset hazard
+    if (hazard) hazard.style.opacity = "0";
+
+    // Reset brake lights
+    if (brakeLights) brakeLights.classList.remove("active");
+
+    // reset simulation status style & hide
+    if (simulationStatus) {
+      simulationStatus.style.color = "";
+      simulationStatus.textContent = "";
+      simulationStatus.hidden = true;
     }
   }
-
-  function showResults() {
-    document.getElementById('quiz-content').classList.add('hidden');
-    const resultsEl = document.getElementById('results');
-    resultsEl.classList.remove('hidden');
-
-    // allow CSS transition to apply
-    setTimeout(() => resultsEl.classList.add('show'), 50);
-
-    document.getElementById('final-score').textContent = score;
-    document.getElementById('correct-count').textContent = score;
-    document.getElementById('final-progress').style.width = `${(score / questions.length) * 100}%`;
-
-    const resultMessage = document.getElementById('result-message');
-    if (score === 10) {
-      resultMessage.textContent = "Perfect! You're a stopping distance expert!";
-    } else if (score >= 8) {
-      resultMessage.textContent = "Excellent! You understand safe following distances well.";
-    } else if (score >= 6) {
-      resultMessage.textContent = "Good job! You know most key concepts about braking.";
-    } else if (score >= 4) {
-      resultMessage.textContent = "You're learning - review the 3-second rule and speed effects.";
-    } else {
-      resultMessage.textContent = "Important to review - these concepts could save lives!";
-    }
-
-    // review list
-    const reviewList = document.getElementById('review-list');
-    reviewList.innerHTML = '';
-    userAnswers.forEach((ans, i) => {
-      const question = questions[ans.question];
-      const correctClass = ans.correct ? 'correct' : 'incorrect';
-      const correctAnswerText = question.options[question.correctAnswer];
-      const userAnswerText = question.options[ans.userAnswer];
-
-      const item = document.createElement('div');
-      item.className = `review-item ${correctClass}`;
-      item.innerHTML = `
-        <p style="margin:0 0 6px;font-weight:600;">Question ${i + 1}: ${question.question}</p>
-        <p style="margin:0 0 4px;"><strong>Your answer:</strong> ${userAnswerText}</p>
-        ${ans.correct ? '' : `<p style="margin:0;"><strong>Correct answer:</strong> ${correctAnswerText}</p>`}
-      `;
-      reviewList.appendChild(item);
-    });
-
-    document.getElementById('restart-btn').addEventListener('click', restartQuiz);
-  }
-
-  function restartQuiz() {
-    currentQuestion = 0;
-    score = 0;
-    userAnswers = [];
-    scoreDisplayEl.textContent = 'Score: 0';
-    const resultsEl = document.getElementById('results');
-    resultsEl.classList.remove('show');
-    // hide then re-display question
-    setTimeout(() => {
-      resultsEl.classList.add('hidden');
-      document.getElementById('quiz-content').classList.remove('hidden');
-      displayQuestion();
-    }, 300);
-  }
-
-  // start
-  displayQuestion();
 });
