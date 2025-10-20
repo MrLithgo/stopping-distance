@@ -4,22 +4,31 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Stopping Distance Simulator</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
      <header class="page-header">
         <div class="header-grid">
-          <div class="header-left">
-            <!-- intentionally empty, keeps center aligned -->
-          </div>
+           <div class="header-left">  <button id="download-worksheet-btn" class="btn navy-btn" aria-label="Download worksheet PDF">Worksheet</button></div>
           <h1 class="page-title">Stopping Distance</h1>
           <div class="header-actions">
             <button class="btn gold-btn">Quiz yourself!</button>
           </div>
         </div>
       </header>
-
+ <script>
+            document.getElementById('download-worksheet-btn').addEventListener('click', () => {
+                const url = '/assets/stopping-distance-worksheet.pdf';
+                const w = window.open(url, '_blank');
+                if (w) {
+                    try { w.opener = null; } catch (e) { }
+                } else {
+                    // popup blocked — fallback to navigate in same tab
+                    window.location.href = url;
+                }
+            });
+        </script>
     <main class="main">
       <!-- Reaction Test Card -->
       <section class="card">
